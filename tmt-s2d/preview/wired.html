@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HisaabDesk — Site · Script · Sheets wiring</title>
+  <link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --site: #188038;
+      --script: #f9ab00;
+      --sheet: #0f9d58;
+      --ink: #1f1a16;
+      --muted: #5c534b;
+      --bg: #ebe4d8;
+      --card: #fffdf8;
+      --rust: #c45c26;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Hind, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    .top {
+      background: #1e1914;
+      color: #f3e6d4;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .top b { color: #e08a3c; }
+    .legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+    .legend span { padding: 4px 8px; border-radius: 999px; color: #111; }
+    .l-site { background: #c6f3d0; }
+    .l-script { background: #ffe08a; }
+    .l-sheet { background: #b7f0d0; }
+    .flow {
+      padding: 10px 18px;
+      background: #fff;
+      border-bottom: 1px solid #d9cfc3;
+      font-size: 14px;
+    }
+    .flow code { background: #f4eee4; padding: 1px 6px; border-radius: 4px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 12px;
+      padding: 12px;
+    }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+    .panel { background: var(--card); border: 1px solid #d4c8b8; border-radius: 12px; overflow: hidden; min-height: 280px; }
+    .chrome { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; }
+    .chrome.site { background: #e8f5e9; color: #0b5c22; }
+    .chrome.script { background: #fff8e1; color: #8a5a00; }
+    .chrome.sheet { background: #e6f4ea; color: #0b6b3a; }
+    .url { font-weight: 400; color: var(--muted); font-size: 12px; }
+    .site-nav { display: flex; gap: 0; border-bottom: 1px solid #e5ddd2; }
+    .site-nav button, .tabs button {
+      border: 0; background: transparent; padding: 8px 14px; cursor: pointer; font: inherit;
+    }
+    .site-nav button.on, .tabs button.on { border-bottom: 3px solid var(--rust); font-weight: 700; }
+    .pad { padding: 14px; }
+    .app-shell { background: #14110e; color: #f3e6d4; border-radius: 10px; padding: 12px; min-height: 320px; }
+    .app-shell input, .app-shell select {
+      width: 100%; background: #1e1914; color: #f3e6d4; border: 1px solid #3d3228;
+      border-radius: 8px; padding: 8px; margin: 4px 0 8px;
+    }
+    .btn { background: var(--rust); color: #fff; border: 0; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-weight: 700; }
+    .btn.ghost { background: transparent; border: 1px solid #3d3228; color: #f3e6d4; }
+    .wire {
+      font-size: 12px;
+      background: #2b2118;
+      color: #e6c99a;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      white-space: pre-wrap;
+    }
+    table.gs { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.gs th { background: #188038; color: #fff; font-weight: 500; padding: 6px 8px; text-align: left; }
+    table.gs td { border-bottom: 1px solid #e6eee8; padding: 6px 8px; }
+    table.gs tr:nth-child(even) td { background: #f7fbf8; }
+    .formula { background: #f8f9fa; border: 1px solid #dadce0; padding: 6px 10px; font-family: ui-monospace, monospace; font-size: 12px; margin-bottom: 8px; }
+    .files { display: flex; min-height: 300px; }
+    .filelist { width: 160px; background: #3c4043; color: #e8eaed; font-size: 12px; padding: 8px 0; }
+    .filelist div { padding: 6px 12px; cursor: default; }
+    .filelist .hi { background: #8ab4f8; color: #202124; font-weight: 700; }
+    .editor { flex: 1; background: #202124; color: #e8eaed; padding: 12px; font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; overflow: auto; }
+    .muted { color: var(--muted); }
+    .ok { color: #7cb342; }
+    .span2 { grid-column: 1 / -1; }
+    h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    h2 { font-size: 1.05rem; margin: 0 0 8px; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div>HisaabDesk wiring · owned by <b>training@sheetomatic.in</b></div>
+    <div class="legend">
+      <span class="l-site">Google Site</span>
+      <span class="l-script">Apps Script web app</span>
+      <span class="l-sheet">Google Sheets</span>
+    </div>
+  </div>
+  <div class="flow">
+    Buyer opens <code>sites.google.com / HisaabDesk</code>
+    → Site embeds <code>script.google.com/.../exec</code> (doGet)
+    → Script reads/writes <code>MASTER</code> (login + license) and <code>TENANT</code> (quote → dispatch).
+    This preview is the same wiring; live IDs fill in after you run <code>setupPlatform()</code> as training@sheetomatic.in.
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="chrome site">Google Site · HisaabDesk <span class="url">sites.google.com/view/hisaabdesk</span></div>
+      <div class="site-nav">
+        <button class="on" data-sp="home">Home</button>
+        <button data-sp="pricing">Pricing</button>
+        <button data-sp="app">App (embed)</button>
+        <button data-sp="training">Training</button>
+      </div>
+      <div class="pad" id="site-page"></div>
+    </div>
+
+    <div class="panel">
+      <div class="chrome script">Apps Script · HisaabDesk S2D <span class="url">script.google.com · /macros/s/EXEC/exec</span></div>
+      <div class="files">
+        <div class="filelist">
+          <div class="hi">Code.gs</div>
+          <div>Auth.gs</div>
+          <div>Quotes.gs</div>
+          <div>Dispatch.gs</div>
+          <div>Index.html</div>
+          <div>appsscript.json</div>
+        </div>
+        <div class="editor" id="script-view"></div>
+      </div>
+    </div>
+
+    <div class="panel span2">
+      <div class="chrome sheet">Google Sheets wired to the Script <span class="url">docs.google.com/spreadsheets · MASTER + TENANT</span></div>
+      <div class="tabs pad" style="padding-bottom:0">
+        <button class="on" data-sh="master">MASTER licenses</button>
+        <button data-sh="tenant">TENANT — DNM Flora Demo</button>
+        <button data-sh="map">Function → tab map</button>
+      </div>
+      <div class="pad" id="sheet-page"></div>
+    </div>
+  </div>
+
+  <div class="grid" style="padding-top:0">
+    <div class="panel span2">
+      <div class="chrome script">Live web app (same UI Sites will embed) · writes the sheets below</div>
+      <div class="pad">
+        <div class="app-shell" id="live-app"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+var DB = {
+  users: [
+    { Email: "training@sheetomatic.in", Role: "Admin", TenantID: "PLATFORM", Active: "TRUE" },
+    { Email: "demo@dnmflora.test", Role: "Owner", TenantID: "TNT-DEMO01", Active: "TRUE" }
+  ],
+  tenants: [
+    { TenantID: "TNT-DEMO01", FirmName: "DNM Flora Demo", OwnerEmail: "demo@dnmflora.test", SheetId: "TENANT_SHEET_ID", Status: "ACTIVE", City: "Raipur" }
+  ],
+  licenses: [
+    { LicenseID: "LIC-TRIAL", TenantID: "TNT-DEMO01", PlanCode: "TRIAL", LicenseType: "TRIAL", ValidTill: "2026-09-01", Status: "ACTIVE" }
+  ],
+  plans: [
+    { PlanCode: "SUB_M", Name: "Monthly", PriceINR: 1999, LicenseType: "SUB" },
+    { PlanCode: "ONE_12", Name: "One-time 12 months", PriceINR: 14999, LicenseType: "ONETIME" }
+  ],
+  parties: [
+    { PartyID: "PTY-DEMO", Name: "Sample Contractor", Phone: "9876543210", City: "Raipur", CreditDays: 30 }
+  ],
+  items: [
+    { ItemID: "ITM-12-Fe500", Name: "TMT 12mm Fe500", Rate: 56.2, Unit: "KG", GSTPct: 18 },
+    { ItemID: "ITM-16-Fe500", Name: "TMT 16mm Fe500", Rate: 56.6, Unit: "KG", GSTPct: 18 },
+    { ItemID: "ITM-20-Fe550", Name: "TMT 20mm Fe550", Rate: 57.8, Unit: "KG", GSTPct: 18 }
+  ],
+  quotes: [],
+  quoteLines: [],
+  orders: [],
+  dispatch: [],
+  stock: [
+    { ItemID: "ITM-12-Fe500", Yard: "Main", Qty: 8000 },
+    { ItemID: "ITM-16-Fe500", Yard: "Main", Qty: 9000 },
+    { ItemID: "ITM-20-Fe550", Yard: "Main", Qty: 7000 }
+  ],
+  lastWire: "Waiting for a login or quote…"
+};
+
+function table(headers, rows) {
+  return '<table class="gs"><tr>' + headers.map(function (h) { return "<th>" + h + "</th>"; }).join("") +
+    "</tr>" + rows.map(function (r) {
+      return "<tr>" + headers.map(function (h) { return "<td>" + (r[h] == null ? "" : r[h]) + "</td>"; }).join("") + "</tr>";
+    }).join("") + "</table>";
+}
+
+var sitePages = {
+  home: "<h1>रेट से डिस्पैच तक।</h1><p class='muted'>TMT traders — quotation, order, yard. Subscription or one-time. Site is the shop window; it does not hold stock or rates.</p><p><b>Embeds → Apps Script /exec</b></p>",
+  pricing: "<h2>Pricing</h2><p>Trial 14 days ₹0<br>Monthly ₹1,999<br>Yearly ₹19,999<br>One-time 12 months ₹14,999</p><p class='muted'>Razorpay webhook → MASTER!Payments → Licenses.ValidTill</p>",
+  app: "<p class='muted'>Google Sites → Insert → Embed → web app URL. X-Frame-Options is ALLOWALL in doGet so this iframe is legal.</p><p><code>https://script.google.com/macros/s/DEPLOY_ID/exec</code></p><p>If cookies block the iframe, the Site button opens the same /exec in a new tab.</p>",
+  training: "<p>training@sheetomatic.in · Sheetomatic<br>This Site page is static. The Script owns login.</p>"
+};
+
+var SCRIPT_TEXT = "function doGet(e) {\n  // Google Site iframe hits this URL\n  var t = HtmlService.createTemplateFromFile('Index');\n  return t.evaluate()\n    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);\n}\n\nfunction apiLogin(email, password) {\n  var user = findRow_(masterSs_(), 'Users', 'Email', email);\n  var lic  = getActiveLicense_(user.TenantID); // MASTER!Licenses\n  return { token, user, license };\n}\n\nfunction apiCreateQuote(token, input) {\n  var book = tenantBook_(session); // TENANT spreadsheet\n  appendRow_(book, 'Quotations', quote);\n  appendRow_(book, 'QuoteLines', line);\n}\n\nfunction apiCreateDispatch(token, input) {\n  appendRow_(book, 'Dispatch', ...);\n  applyStock_(book, item, yard, 0, qty, 'DISPATCH', id);\n}";
+
+document.getElementById("script-view").textContent = SCRIPT_TEXT;
+
+function renderSite(name) {
+  document.querySelectorAll("[data-sp]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-sp") === name); });
+  document.getElementById("site-page").innerHTML = sitePages[name];
+}
+
+function renderSheet(name) {
+  document.querySelectorAll("[data-sh]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-sh") === name); });
+  var el = document.getElementById("sheet-page");
+  if (name === "master") {
+    el.innerHTML = "<div class='formula'>A1 · MASTER · opened by Script Property MASTER_SHEET_ID · training@sheetomatic.in</div>" +
+      "<h2>Users</h2>" + table(["Email", "Role", "TenantID", "Active"], DB.users) +
+      "<h2>Tenants</h2>" + table(["TenantID", "FirmName", "OwnerEmail", "SheetId", "Status", "City"], DB.tenants) +
+      "<h2>Licenses</h2>" + table(["LicenseID", "TenantID", "PlanCode", "LicenseType", "ValidTill", "Status"], DB.licenses);
+  } else if (name === "tenant") {
+    el.innerHTML = "<div class='formula'>A1 · TENANT copy of template · Tenants.SheetId = this workbook</div>" +
+      "<h2>Parties</h2>" + table(["PartyID", "Name", "Phone", "City", "CreditDays"], DB.parties) +
+      "<h2>Quotations</h2>" + table(["QuoteID", "PartyID", "Status", "GrandTotal", "TrueMarginPct"], DB.quotes) +
+      "<h2>QuoteLines</h2>" + table(["LineID", "QuoteID", "ItemID", "Qty", "Rate", "Amount"], DB.quoteLines) +
+      "<h2>Dispatch</h2>" + table(["DispatchID", "OrderID", "Vehicle", "Eway", "Status"], DB.dispatch) +
+      "<h2>Stock</h2>" + table(["ItemID", "Yard", "Qty"], DB.stock);
+  } else {
+    el.innerHTML = table(["Apps Script", "Sheet", "Tab", "Direction"], [
+      { "Apps Script": "doGet", Sheet: "—", Tab: "serves Index.html to Site iframe", Direction: "read UI" },
+      { "Apps Script": "apiLogin", Sheet: "MASTER", Tab: "Users + Licenses", Direction: "read" },
+      { "Apps Script": "apiBootstrap", Sheet: "TENANT", Tab: "Settings, Parties, Items, RateList, Stock", Direction: "read" },
+      { "Apps Script": "apiSaveRate", Sheet: "TENANT", Tab: "RateList", Direction: "append" },
+      { "Apps Script": "apiCreateQuote", Sheet: "TENANT", Tab: "Quotations + QuoteLines", Direction: "append" },
+      { "Apps Script": "apiConvertOrder", Sheet: "TENANT", Tab: "Orders + OrderLines; Quotations.Status=WON", Direction: "write" },
+      { "Apps Script": "apiCreateDispatch", Sheet: "TENANT", Tab: "Dispatch, DispatchLines, Stock, StockMove", Direction: "write" },
+      { "Apps Script": "sendWhatsAppText_", Sheet: "TENANT", Tab: "WA_Log", Direction: "append" },
+      { "Apps Script": "handleRazorpayWebhook_", Sheet: "MASTER", Tab: "Payments + Licenses", Direction: "append/update" },
+      { "Apps Script": "provisionTenant_", Sheet: "both", Tab: "copy template → new SheetId on Tenants", Direction: "create" }
+    ]);
+  }
+}
+
+function renderApp() {
+  var items = DB.items.map(function (it) {
+    return "<option value='" + it.ItemID + "'>" + it.Name + " · ₹" + it.Rate + "</option>";
+  }).join("");
+  document.getElementById("live-app").innerHTML =
+    "<div class='muted'>Logged in as demo@dnmflora.test · DNM Flora Demo · TRIAL</div>" +
+    "<h2>नया कोटेशन</h2>" +
+    "<label>पार्टी</label><select id='q-party'><option value='PTY-DEMO'>Sample Contractor · Raipur</option></select>" +
+    "<label>आइटम</label><select id='q-item'>" + items + "</select>" +
+    "<div style='display:grid;grid-template-columns:1fr 1fr;gap:8px'>" +
+    "<div><label>मात्रा KG</label><input id='q-qty' type='number' value='2000'></div>" +
+    "<div><label>फ्रेट ₹</label><input id='q-fr' type='number' value='1500'></div></div>" +
+    "<button class='btn' id='q-go'>सेव कोट + शीट में लिखो</button> " +
+    "<button class='btn ghost' id='q-od'>ऑर्डर बनाओ + डिस्पैच</button>" +
+    "<div class='wire' id='wire'>" + DB.lastWire + "</div>";
+  document.getElementById("q-go").onclick = makeQuote;
+  document.getElementById("q-od").onclick = makeDispatch;
+}
+
+function makeQuote() {
+  var item = DB.items.filter(function (i) { return i.ItemID === document.getElementById("q-item").value; })[0];
+  var qty = Number(document.getElementById("q-qty").value);
+  var fr = Number(document.getElementById("q-fr").value);
+  var amt = qty * item.Rate;
+  var gst = amt * 0.18;
+  var credit = amt * (30 / 365) * 0.18;
+  var margin = ((amt - amt - fr - credit + amt * 0) ); // landed = same rate in demo
+  var profit = amt - (item.Rate * qty) - fr - credit;
+  var mp = amt ? (profit / amt) * 100 : 0;
+  var qid = "Q-DEMO" + (DB.quotes.length + 1);
+  var lid = "QL-" + (DB.quoteLines.length + 1);
+  DB.quotes.unshift({ QuoteID: qid, PartyID: "PTY-DEMO", Status: "OPEN", GrandTotal: (amt + gst + fr).toFixed(2), TrueMarginPct: mp.toFixed(2) });
+  DB.quoteLines.unshift({ LineID: lid, QuoteID: qid, ItemID: item.ItemID, Qty: qty, Rate: item.Rate, Amount: amt.toFixed(2) });
+  DB.lastWire =
+    "apiCreateQuote()\n" +
+    "  TENANT!Quotations += " + qid + "  total ₹" + (amt + gst + fr).toFixed(0) + "  margin " + mp.toFixed(1) + "%\n" +
+    "  TENANT!QuoteLines  += " + item.Name + " × " + qty + " KG\n" +
+    "  MASTER!Audit       += QUOTE " + qid + " by demo@dnmflora.test\n" +
+    "  Site iframe only refreshed the HTML — data lives in Sheets.";
+  renderApp();
+  renderSheet("tenant");
+}
+
+function makeDispatch() {
+  if (!DB.quotes.length) { makeQuote(); }
+  var q = DB.quotes[0];
+  q.Status = "WON";
+  var oid = "SO-" + (DB.orders.length + 1);
+  var did = "DS-" + (DB.dispatch.length + 1);
+  var ln = DB.quoteLines[0];
+  DB.orders.unshift({ OrderID: oid, QuoteID: q.QuoteID, Status: "DISPATCHED" });
+  DB.dispatch.unshift({ DispatchID: did, OrderID: oid, Vehicle: "CG04 AB 2199", Eway: "3910XXXX", Status: "OUT" });
+  DB.stock.forEach(function (s) {
+    if (s.ItemID === ln.ItemID) s.Qty = Number(s.Qty) - Number(ln.Qty);
+  });
+  DB.lastWire =
+    "apiConvertOrder() → TENANT!Orders " + oid + " · Quotations.Status=WON\n" +
+    "apiCreateDispatch() → TENANT!Dispatch " + did + "  CG04 AB 2199\n" +
+    "applyStock_() → TENANT!Stock " + ln.ItemID + "  −" + ln.Qty + " KG\n" +
+    "Site embed still points at the same /exec. Sheets are the database.";
+  renderApp();
+  renderSheet("tenant");
+}
+
+document.querySelectorAll("[data-sp]").forEach(function (b) {
+  b.onclick = function () { renderSite(b.getAttribute("data-sp")); };
+});
+document.querySelectorAll("[data-sh]").forEach(function (b) {
+  b.onclick = function () { renderSheet(b.getAttribute("data-sh")); };
+});
+
+renderSite("app");
+renderSheet("map");
+renderApp();
+if (/[?&]demo=1/.test(location.search)) {
+  makeQuote();
+  makeDispatch();
+  renderSite("home");
+}
+if (/[?&]view=tenant/.test(location.search)) {
+  makeQuote();
+  renderSheet("tenant");
+}
+if (/[?&]view=master/.test(location.search)) {
+  renderSheet("master");
+}
+</script>
+</body>
+</html>
