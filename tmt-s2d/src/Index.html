@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><?= product ?></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <?!= include('Styles'); ?>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <div id="view-login">
+      <div class="login-hero">
+        <div class="muted"><?= company ?></div>
+        <h1>रेट से बिल तक।<br>एक लॉगिन, एक यार्ड।</h1>
+        <p class="muted">TMT / pipe traders — quotation, order, dispatch. Subscription or one-time license.</p>
+      </div>
+      <div class="card">
+        <div id="login-flash" class="flash hidden"></div>
+        <label>ईमेल</label>
+        <input id="email" type="email" autocomplete="username" placeholder="owner@firm.in">
+        <label>पासवर्ड</label>
+        <input id="password" type="password" autocomplete="current-password">
+        <button class="btn wide" id="btn-login">लॉगिन</button>
+      </div>
+      <div class="card">
+        <h2>प्लान</h2>
+        <div id="plans" class="muted">लोड हो रहा है…</div>
+      </div>
+    </div>
+
+    <div id="view-app" class="hidden">
+      <header class="appbar">
+        <div class="brand">
+          <b id="firm-name">HisaabDesk</b>
+          <span id="firm-meta"></span>
+        </div>
+        <button class="btn ghost" id="btn-logout">लॉगआउट</button>
+      </header>
+      <div class="pills" id="nav"></div>
+      <div id="flash" class="flash hidden"></div>
+      <div id="screen"></div>
+    </div>
+  </div>
+  <footer class="note">HisaabDesk · Sheetomatic · <?= company ?> · training@sheetomatic.in</footer>
+  <?!= include('Client'); ?>
+</body>
+</html>
