@@ -1,36 +1,43 @@
 # Sheet schema
 
+Aligned to the public template **TMT Bars – Sales to Dispatch (AppSheet)**  
+https://sheetomatic.com/templates — see `TEMPLATE-TMT-S2D.md`.
+
 ## Master (`HisaabDesk — MASTER licenses`)
 
 Owned by `training@sheetomatic.in`. Not shared with customers.
 
 | Tab | Key | Notes |
 |---|---|---|
-| Tenants | TenantID | One row per shop. `SheetId` is their workbook. |
-| Users | UserID / Email | Password is SHA-256(salt + password). Roles: Admin, Owner, Sales, Dispatch, View. |
-| Licenses | LicenseID | TRIAL / SUB / ONETIME. Enforce `ValidTill` + 7-day grace. |
-| Payments | PaymentID | Razorpay events. |
-| Plans | PlanCode | TRIAL, SUB_M, SUB_Y, ONE_12. |
-| Audit | — | Login, quote, dispatch, WA. |
+| Tenants | TenantID | One shop. `SheetId` = their TMT workbook. |
+| Users | Email | Password hash. Roles: Admin, Owner, Sales, Dispatch, View. |
+| Licenses | LicenseID | TRIAL / SUB / ONETIME. `ValidTill` + 7-day grace. |
+| Payments | PaymentID | Razorpay or UPI logged. |
+| Plans | PlanCode | Include `APP_9999` = ₹9,999 one-time (same as templates page). |
+| Audit | — | Login, DO, kanta, WA. |
 | SetupNotes | Key | Delete password rows after first run. |
 
-## Tenant template (copied per shop)
+## Tenant template (copy of the AppSheet TMT app)
 
-| Tab | Replaces typical AppSheet table | Notes |
+| Tab | AppSheet job | Notes |
 |---|---|---|
-| Settings | App settings | FirmName, GSTIN, QuoteFooter, InterestPct, DefaultYard |
-| Parties | Customers | Phone, credit days, limit |
-| Items | Item master | TMT size + grade, HSN, GST% |
-| RateList | Daily rates | Append-only. Latest ValidFrom wins. |
-| Quotations | Quotes header | TrueMarginPct after freight + credit cost |
-| QuoteLines | Quote items | Qty × rate |
-| Orders | Sales orders | Created from won quote |
-| OrderLines | Order items | QtyOrdered / QtyDispatched |
-| Dispatch | Vehicles out | Vehicle, LR, e-way |
-| DispatchLines | Dispatch items | Deducts Stock |
-| Stock | Yard qty | ItemID + Yard |
-| StockMove | Ledger | Never edit by hand |
-| Receipts | Collections | Ready for Phase 4 |
-| WA_Log | Bot history | SENT / FAIL / SKIPPED |
+| Plants | Plant dropdown | Mill / source |
+| Brands | Brand dropdown | Kamdhenu, JSPL, Prime… |
+| Parties | Party | Customer or mill |
+| Sizes | Size | 8–32 mm, MT/Kg |
+| Godowns | Godown | Own yard |
+| Vehicles | Vehicle | HR 55 B 1234 |
+| PurchaseSauda | Purchase sauda | Buy deal |
+| SaleSauda | Sale sauda | Sell deal; link to purchase sauda; Retail/Direct |
+| DOs | Delivery Order | Plant, brand, party, size, MT/Kg, status |
+| Kanta | Load / unload weigh | Kg + MT |
+| Trips | Vehicle track + freight | Load point, unload point |
+| GodownStock | Godown qty | Brand + size + godown |
+| StockMove | Movement ledger | Do not edit by hand |
+| FreightBills | Freight | Per trip |
+| PartyPayments | Party payments | Against party / DO |
+| Settings | App settings | Firm, default godown, default unit |
 
-When the DNM Flora AppSheet workbook is visible, map each live column into this table. Do not rename live client headers until after a copy is taken.
+DO status: New → Loading → Loaded → In Transit → Dispatched → Delivered.
+
+Do not rename a live client’s headers until a copy of their AppSheet sheet is taken.
