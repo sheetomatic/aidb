@@ -93,7 +93,8 @@ function seedPlans_(master) {
     ['TRIAL', '14-day trial', 'TRIAL', 0, 0, 2, 20, 'quote,order,dispatch'],
     ['SUB_M', 'Monthly', 'SUB', 1999, 1, 3, 300, 'quote,order,dispatch,stock,wa'],
     ['SUB_Y', 'Yearly', 'SUB', 19999, 12, 5, 500, 'quote,order,dispatch,stock,wa'],
-    ['ONE_12', 'One-time 12 months', 'ONETIME', 14999, 12, 3, 300, 'quote,order,dispatch,stock,wa']
+    ['ONE_12', 'One-time 12 months', 'ONETIME', 14999, 12, 3, 300, 'quote,order,dispatch,stock,wa'],
+    ['APP_9999', 'TMT S2D AppSheet-parity one-time', 'ONETIME', 9999, 12, 3, 300, 'do,sauda,kanta,godown,freight,pay']
   ];
   var sh = sheet_(master, 'Plans');
   plans.forEach(function (p) { sh.appendRow(p); });

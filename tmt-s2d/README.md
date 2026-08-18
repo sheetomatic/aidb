@@ -10,7 +10,7 @@ Replaces an AppSheet *SalesToDispatch* stack (quotes → orders → dispatch + W
 - WhatsApp Cloud API (same role as the AppSheet Bot)
 - Razorpay webhook for activation
 
-Reference client: **DNM Flora** (steel bar trading). The live AppSheet app was not opened in this pass (Google login blocked). Schema matches a typical S2D TMT workbook and can be remapped 1:1 when the source sheet is shared view-only.
+Source product: **[TMT Bars – Sales to Dispatch (AppSheet)](https://sheetomatic.com/templates)** — ₹9,999, TMT SALES OPERATIONS (DO, sauda, kanta, retail/direct). Spec: `docs/TEMPLATE-TMT-S2D.md`. Reference client: **DNM Flora**.
 
 ## Repo
 
