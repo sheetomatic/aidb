@@ -1,6 +1,18 @@
 # Raksha Bandhan — Sheetomatic
 
-## v4 — Real logo + website contact (latest)
+## v5 — Hindi, simple, single logo (latest)
+One logo only. Hindi text. No duplicate marks.
+
+| File | Style | Use |
+|------|-------|-----|
+| `v5/raksha-v5-01-hindi-simple.png` | Cream, minimal | Feed |
+| `v5/raksha-v5-02-hindi-gradient.png` | Brand gradient | Feed |
+| `v5/raksha-v5-03-hindi-contact.png` | Contact footer, no logo repeat | Feed |
+| `v5/raksha-v5-04-hindi-story.png` | Story | Story |
+
+Mobile copy: `captions/mobile-v5/01`–`04`
+
+## v4 — Real logo + website contact
 Uses official gradient S logo + contact from sheetomatic.com
 
 | File | Style | Use |
