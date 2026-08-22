@@ -1,6 +1,18 @@
 # Raksha Bandhan — Sheetomatic
 
-## v5 — Hindi, simple, single logo (latest)
+## final — Approved 3rd option + logo & info (USE THIS)
+Original S-thread PROTECT/SCALE layout with Hindi line + single logo footer.
+
+| File | Style | Use |
+|------|-------|-----|
+| `final/raksha-final-01-cream.png` | Cream (primary) | Feed |
+| `final/raksha-final-02-terracotta.png` | Terracotta bg | Feed |
+| `final/raksha-final-03-dark.png` | Dark mode | Feed / LinkedIn |
+| `final/raksha-final-04-story.png` | Story | Story |
+
+Mobile copy: `captions/mobile-final/01`–`04`
+
+## v5 — Hindi, simple, single logo
 One logo only. Hindi text. No duplicate marks.
 
 | File | Style | Use |
