@@ -1,19 +1,27 @@
 # Raksha Bandhan — Sheetomatic
 
-## v3 — S-thread branded series (approved)
-Built from the S-thread PROTECT/SCALE concept with logo, colors, and company info.
+## v4 — Real logo + website contact (latest)
+Uses official gradient S logo + contact from sheetomatic.com
 
 | File | Style | Use |
 |------|-------|-----|
-| `v3/raksha-v3-01-branded-feed.png` | Cream + logo footer | Feed |
-| `v3/raksha-v3-02-terracotta-bg.png` | Terracotta colored bg | Feed |
-| `v3/raksha-v3-03-dark-branded.png` | Charcoal dark mode | Feed / LinkedIn |
-| `v3/raksha-v3-04-full-info.png` | Full contact info block | Feed / LinkedIn |
-| `v3/raksha-v3-05-story-branded.png` | Story + CTA | Story |
+| `v4/raksha-v4-01-logo-feed.png` | Cream + logo + tagline | Feed |
+| `v4/raksha-v4-02-gradient-branded.png` | Brand gradient bg | Feed |
+| `v4/raksha-v4-03-full-contact.png` | Full contact card | Feed / LinkedIn |
+| `v4/raksha-v4-04-logo-thread-fusion.png` | Logo + rakhi thread | Feed (hero) |
+| `v4/raksha-v4-05-story-whatsapp.png` | Story + WhatsApp CTA | Story |
 
-Mobile copy: `captions/mobile-v3/01`–`05`
+Logo asset: `../assets/sheetomatic-logo.svg`
 
-## v2 — Rand / Glaser explorations
-`images/v2/` — geometric + poster explorations
+**Contact (from sheetomatic.com):**
+- sheetomatic.com
+- WhatsApp: +91 93291 03106
+- Phone: +91 97557 33107
+- Instagram: @sheetomatic
 
-Creative direction saved to agent memory.
+Mobile copy: `captions/mobile-v4/01`–`05`
+
+## v3 — S-thread branded series
+`images/v3/` — earlier explorations with placeholder contact
+
+Creative direction + brand saved to agent memory.
