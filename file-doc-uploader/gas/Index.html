@@ -400,7 +400,7 @@
     <header class="brand">
       <div>
         <h1>FileDoc Capture</h1>
-        <p>One file number → one Drive folder → up to 100 docs</p>
+        <p>One file number → scan up to 60 pages → one PDF</p>
       </div>
       <div class="badge" id="modeBadge">Local demo</div>
     </header>
@@ -414,7 +414,7 @@
         </div>
         <div class="progress-wrap">
           <div class="progress-meta">
-            <span>Saved on form: <strong id="countLabel">0 / 100</strong></span>
+            <span>Pages: <strong id="countLabel">0 / 60</strong></span>
             <span id="folderLabel">Folder: —</span>
           </div>
           <div class="bar" aria-hidden="true"><span id="progressBar"></span></div>
@@ -426,378 +426,46 @@
         <canvas id="canvas"></canvas>
         <img class="preview" id="shotPreview" alt="Captured document preview" />
         <div class="guide" id="guide" hidden></div>
-        <div class="camera-hint" id="cameraHint">Enter a file number, then open the camera to capture documents one by one.</div>
+        <div class="camera-hint" id="cameraHint">Enter a file number, then scan pages one by one.</div>
       </div>
 
       <div class="actions">
         <button type="button" class="btn-secondary" id="openCameraBtn" disabled>Open camera</button>
         <button type="button" class="btn-accent" id="captureBtn" disabled>Click / Capture</button>
-        <button type="button" class="btn-secondary span-2" id="pickBtn" disabled>Or choose / take photo</button>
+        <button type="button" class="btn-secondary span-2" id="pickBtn" disabled>Or choose photo</button>
         <input id="filePick" type="file" accept="image/*" capture="environment" hidden />
-        <button type="button" class="btn-primary span-2" id="saveToFormBtn" disabled>Save this photo to form</button>
+        <button type="button" class="btn-primary span-2" id="saveToFormBtn" disabled>Add this page</button>
         <button type="button" class="btn-secondary span-2" id="retakeBtn" hidden>Retake</button>
       </div>
     </section>
 
     <div class="list-head">
-      <h2>On this form</h2>
+      <h2>Pages in this scan</h2>
       <span id="sessionMeta">Not started</span>
     </div>
-    <div id="emptyState" class="empty">No documents yet. Capture and save one at a time.</div>
+    <div id="emptyState" class="empty">No pages yet. Scan and add one page at a time, up to 60.</div>
     <ul class="doc-list" id="docList" hidden></ul>
 
     <div class="final">
-      <button type="button" class="btn-primary btn-block" id="saveAllBtn" disabled>Done — save all to Google Drive</button>
-      <button type="button" class="btn-danger btn-block" id="clearBtn" disabled>Clear form photos</button>
+      <button type="button" class="btn-primary btn-block" id="saveAllBtn" disabled>Done — make PDF</button>
+      <button type="button" class="btn-danger btn-block" id="clearBtn" disabled>Clear pages</button>
     </div>
     <p class="mode-note" id="modeNote">
-      Demo mode keeps photos on this device until you press Done.
-      Deploy the Apps Script files in <code>gas/</code> to upload into real Drive folders.
+      Demo mode downloads the PDF on this device. Deploy <code>gas/</code> and open that web app from AppSheet to save the PDF into Drive.
     </p>
   </div>
 
   <div class="toast" id="toast" role="status"></div>
 
   <script>
-    const MAX_DOCS = 100;
-    const state = {
-      fileNumber: "",
-      locked: false,
-      stream: null,
-      pendingDataUrl: null,
-      docs: [],
-      gasMode: typeof google !== "undefined" && google.script && google.script.run
-    };
-
-    const els = {
-      fileNumber: document.getElementById("fileNumber"),
-      lockFileBtn: document.getElementById("lockFileBtn"),
-      openCameraBtn: document.getElementById("openCameraBtn"),
-      captureBtn: document.getElementById("captureBtn"),
-      pickBtn: document.getElementById("pickBtn"),
-      filePick: document.getElementById("filePick"),
-      saveToFormBtn: document.getElementById("saveToFormBtn"),
-      retakeBtn: document.getElementById("retakeBtn"),
-      saveAllBtn: document.getElementById("saveAllBtn"),
-      clearBtn: document.getElementById("clearBtn"),
-      video: document.getElementById("video"),
-      canvas: document.getElementById("canvas"),
-      shotPreview: document.getElementById("shotPreview"),
-      cameraStage: document.getElementById("cameraStage"),
-      cameraHint: document.getElementById("cameraHint"),
-      guide: document.getElementById("guide"),
-      countLabel: document.getElementById("countLabel"),
-      folderLabel: document.getElementById("folderLabel"),
-      progressBar: document.getElementById("progressBar"),
-      emptyState: document.getElementById("emptyState"),
-      docList: document.getElementById("docList"),
-      sessionMeta: document.getElementById("sessionMeta"),
-      toast: document.getElementById("toast"),
-      modeBadge: document.getElementById("modeBadge"),
-      modeNote: document.getElementById("modeNote")
-    };
-
-    if (state.gasMode) {
-      els.modeBadge.textContent = "Google Drive";
-      els.modeNote.textContent = "Connected to Apps Script. Done uploads all photos into Drive folder for this file number.";
-    }
-
-    function toast(message, type) {
-      els.toast.textContent = message;
-      els.toast.className = "toast show" + (type ? " " + type : "");
-      clearTimeout(toast._t);
-      toast._t = setTimeout(() => els.toast.classList.remove("show"), 2600);
-    }
-
-    function folderName(fileNumber) {
-      return "File-" + String(fileNumber).trim().replace(/[\\/:*?"<>|]/g, "-");
-    }
-
-    function nextDocName() {
-      const n = String(state.docs.length + 1).padStart(3, "0");
-      return "doc-" + n + ".jpg";
-    }
-
-    function updateUI() {
-      const count = state.docs.length;
-      els.countLabel.textContent = count + " / " + MAX_DOCS;
-      els.progressBar.style.width = ((count / MAX_DOCS) * 100) + "%";
-      els.folderLabel.textContent = state.locked ? ("Folder: " + folderName(state.fileNumber)) : "Folder: —";
-      els.sessionMeta.textContent = state.locked ? ("File " + state.fileNumber) : "Not started";
-      els.openCameraBtn.disabled = !state.locked || count >= MAX_DOCS;
-      els.pickBtn.disabled = !state.locked || count >= MAX_DOCS;
-      els.captureBtn.disabled = !state.stream || !!state.pendingDataUrl || count >= MAX_DOCS;
-      els.saveToFormBtn.disabled = !state.pendingDataUrl || count >= MAX_DOCS;
-      els.saveAllBtn.disabled = !state.locked || count === 0;
-      els.clearBtn.disabled = count === 0;
-      els.lockFileBtn.textContent = state.locked ? "Change" : "Start";
-      els.fileNumber.disabled = state.locked && count > 0;
-
-      if (count === 0) {
-        els.emptyState.hidden = false;
-        els.docList.hidden = true;
-        els.docList.innerHTML = "";
-      } else {
-        els.emptyState.hidden = true;
-        els.docList.hidden = false;
-        els.docList.innerHTML = state.docs.map((doc, idx) => `
-          <li class="doc-item">
-            <img src="${doc.dataUrl}" alt="${doc.name}" />
-            <div>
-              <h3>${doc.name}</h3>
-              <p>${Math.round(doc.size / 1024)} KB · ready</p>
-            </div>
-            <button type="button" class="btn-danger" data-remove="${idx}" aria-label="Remove ${doc.name}">✕</button>
-          </li>
-        `).join("");
-      }
-    }
-
-    async function stopCamera() {
-      if (state.stream) {
-        state.stream.getTracks().forEach((t) => t.stop());
-        state.stream = null;
-      }
-      els.video.srcObject = null;
-      els.guide.hidden = true;
-    }
-
-    async function openCamera() {
-      if (!state.locked) return;
-      if (state.docs.length >= MAX_DOCS) {
-        toast("Limit reached: 100 documents per file.", "err");
-        return;
-      }
-      try {
-        await stopCamera();
-        state.pendingDataUrl = null;
-        els.cameraStage.classList.remove("is-preview");
-        els.retakeBtn.hidden = true;
-        els.saveToFormBtn.hidden = false;
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          }
-        });
-        state.stream = stream;
-        els.video.srcObject = stream;
-        await els.video.play();
-        els.guide.hidden = false;
-        els.cameraHint.textContent = "Align the document, then press Click / Capture.";
-        updateUI();
-        toast("Camera ready", "ok");
-      } catch (err) {
-        console.error(err);
-        els.cameraHint.textContent = "Camera blocked. Allow camera permission and try again.";
-        toast("Could not open camera", "err");
-      }
-    }
-
-    function showPending(dataUrl) {
-      state.pendingDataUrl = dataUrl;
-      els.shotPreview.src = dataUrl;
-      els.cameraStage.classList.add("is-preview");
-      els.cameraHint.textContent = "Looks good? Save to form, or retake.";
-      els.retakeBtn.hidden = false;
-      updateUI();
-    }
-
-    function captureShot() {
-      if (!state.stream) return;
-      const video = els.video;
-      const canvas = els.canvas;
-      const w = video.videoWidth || 1280;
-      const h = video.videoHeight || 960;
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, w, h);
-      showPending(canvas.toDataURL("image/jpeg", 0.88));
-    }
-
-    function pickPhoto() {
-      if (!state.locked || state.docs.length >= MAX_DOCS) return;
-      els.filePick.value = "";
-      els.filePick.click();
-    }
-
-    function onPickedFile(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => showPending(String(reader.result));
-      reader.readAsDataURL(file);
-    }
-
-    function retake() {
-      state.pendingDataUrl = null;
-      els.cameraStage.classList.remove("is-preview");
-      els.shotPreview.removeAttribute("src");
-      els.retakeBtn.hidden = true;
-      els.cameraHint.textContent = "Align the document, then press Click / Capture.";
-      updateUI();
-    }
-
-    function saveToForm() {
-      if (!state.pendingDataUrl) return;
-      if (state.docs.length >= MAX_DOCS) {
-        toast("Already at 100 documents.", "err");
-        return;
-      }
-      const dataUrl = state.pendingDataUrl;
-      const approxBytes = Math.round((dataUrl.length * 3) / 4);
-      state.docs.push({
-        name: nextDocName(),
-        dataUrl,
-        size: approxBytes,
-        capturedAt: new Date().toISOString()
-      });
-      state.pendingDataUrl = null;
-      els.cameraStage.classList.remove("is-preview");
-      els.shotPreview.removeAttribute("src");
-      els.retakeBtn.hidden = true;
-      els.cameraHint.textContent = "Saved on form. Capture the next document, or press Done when finished.";
-      updateUI();
-      toast("Photo saved to form (" + state.docs.length + "/" + MAX_DOCS + ")", "ok");
-    }
-
-    function lockOrChangeFile() {
-      if (state.locked && state.docs.length > 0) {
-        toast("Clear photos before changing file number.", "err");
-        return;
-      }
-      if (state.locked) {
-        state.locked = false;
-        state.fileNumber = "";
-        stopCamera();
-        els.cameraHint.textContent = "Enter a file number, then open the camera to capture documents one by one.";
-        updateUI();
-        return;
-      }
-      const value = els.fileNumber.value.trim();
-      if (!value) {
-        toast("Enter a file number first.", "err");
-        els.fileNumber.focus();
-        return;
-      }
-      state.fileNumber = value;
-      state.locked = true;
-      els.cameraHint.textContent = "File locked. Open camera and capture documents one by one.";
-      updateUI();
-      toast("Session started for " + value, "ok");
-    }
-
-    function clearForm() {
-      if (!state.docs.length) return;
-      if (!confirm("Remove all photos from this form?")) return;
-      state.docs = [];
-      state.pendingDataUrl = null;
-      els.cameraStage.classList.remove("is-preview");
-      updateUI();
-      toast("Form cleared", "ok");
-    }
-
-    function dataUrlToPayload(doc) {
-      const base64 = doc.dataUrl.split(",")[1];
-      return {
-        name: doc.name,
-        mimeType: "image/jpeg",
-        data: base64,
-        capturedAt: doc.capturedAt
-      };
-    }
-
-    async function saveAllLocal() {
-      const payload = {
-        fileNumber: state.fileNumber,
-        folderName: folderName(state.fileNumber),
-        documentCount: state.docs.length,
-        maxDocuments: MAX_DOCS,
-        savedAt: new Date().toISOString(),
-        documents: state.docs.map((d) => ({
-          name: d.name,
-          size: d.size,
-          capturedAt: d.capturedAt,
-          dataUrl: d.dataUrl
-        }))
-      };
-      localStorage.setItem("filedoc-last-batch", JSON.stringify({
-        fileNumber: payload.fileNumber,
-        folderName: payload.folderName,
-        documentCount: payload.documentCount,
-        savedAt: payload.savedAt
-      }));
-      // Offer a JSON download so the demo is tangible without Drive credentials.
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = folderName(state.fileNumber) + "-batch.json";
-      a.click();
-      URL.revokeObjectURL(a.href);
-      toast("Batch saved locally (demo). Deploy gas/ for real Drive upload.", "ok");
-    }
-
-    function saveAllGas() {
-      return new Promise((resolve, reject) => {
-        google.script.run
-          .withSuccessHandler(resolve)
-          .withFailureHandler(reject)
-          .uploadBatch({
-            fileNumber: state.fileNumber,
-            folderName: folderName(state.fileNumber),
-            documents: state.docs.map(dataUrlToPayload)
-          });
-      });
-    }
-
-    async function saveAll() {
-      if (!state.docs.length) return;
-      els.saveAllBtn.disabled = true;
-      els.saveAllBtn.textContent = "Saving…";
-      try {
-        if (state.gasMode) {
-          const result = await saveAllGas();
-          toast("Uploaded " + result.count + " docs to Drive /" + result.folderName, "ok");
-        } else {
-          await saveAllLocal();
-        }
-      } catch (err) {
-        console.error(err);
-        toast(String(err && err.message ? err.message : err), "err");
-      } finally {
-        els.saveAllBtn.textContent = "Done — save all to Google Drive";
-        updateUI();
-      }
-    }
-
-    els.lockFileBtn.addEventListener("click", lockOrChangeFile);
-    els.openCameraBtn.addEventListener("click", openCamera);
-    els.captureBtn.addEventListener("click", captureShot);
-    els.pickBtn.addEventListener("click", pickPhoto);
-    els.filePick.addEventListener("change", onPickedFile);
-    els.saveToFormBtn.addEventListener("click", saveToForm);
-    els.retakeBtn.addEventListener("click", retake);
-    els.saveAllBtn.addEventListener("click", saveAll);
-    els.clearBtn.addEventListener("click", clearForm);
-    els.docList.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-remove]");
-      if (!btn) return;
-      const idx = Number(btn.getAttribute("data-remove"));
-      state.docs.splice(idx, 1);
-      state.docs.forEach((doc, i) => {
-        doc.name = "doc-" + String(i + 1).padStart(3, "0") + ".jpg";
-      });
-      updateUI();
-      toast("Removed from form", "ok");
-    });
-    els.fileNumber.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") lockOrChangeFile();
-    });
-
-    updateUI();
+<?!= include('ScanPdf'); ?>
   </script>
+  <script>
+    window.FILEDOC_PREFILL = <?!= JSON.stringify(prefillFileNumber) ?>;
+  </script>
+  <script>
+<?!= include('App'); ?>
+  </script>
+
 </body>
 </html>
