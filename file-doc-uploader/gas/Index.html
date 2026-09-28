@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a1f1c" />
+  <title>FileDoc Capture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #071614;
+      --panel: #0d2420;
+      --panel-2: #12332d;
+      --line: rgba(180, 230, 210, 0.16);
+      --mist: #b7d8cf;
+      --text: #eef7f3;
+      --muted: #8fb3a8;
+      --accent: #2ec4a0;
+      --accent-2: #f0b429;
+      --danger: #ff6b6b;
+      --ok: #3dd68c;
+      --radius: 18px;
+      --tap: 48px;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      --font-display: "Bricolage Grotesque", Georgia, serif;
+      --font-body: "Figtree", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(46, 196, 160, 0.22), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(240, 180, 41, 0.14), transparent 50%),
+        linear-gradient(165deg, #061412 0%, #0a1f1c 42%, #102b26 100%);
+      color: var(--text);
+      font-family: var(--font-body);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    }
+
+    .shell {
+      width: min(560px, 100%);
+      margin: 0 auto;
+      animation: rise 0.7s ease both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(46, 196, 160, 0.45); }
+      70% { box-shadow: 0 0 0 14px rgba(46, 196, 160, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(46, 196, 160, 0); }
+    }
+
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(10px) scale(0.98); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.7rem, 6vw, 2.15rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+
+    .brand p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .badge {
+      flex-shrink: 0;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(18, 51, 45, 0.7);
+      color: var(--mist);
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(18, 51, 45, 0.88), rgba(13, 36, 32, 0.92));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-pad { padding: 16px; }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--mist);
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      min-height: var(--tap);
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(7, 22, 20, 0.7);
+      color: var(--text);
+      font: 600 1.05rem var(--font-body);
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: rgba(46, 196, 160, 0.7);
+      box-shadow: 0 0 0 3px rgba(46, 196, 160, 0.18);
+    }
+
+    button {
+      min-height: var(--tap);
+      border: 0;
+      border-radius: 14px;
+      padding: 0 16px;
+      font: 700 0.95rem var(--font-body);
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+    }
+
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2ec4a0, #1fa88a);
+      color: #04241d;
+    }
+
+    .btn-secondary {
+      background: rgba(238, 247, 243, 0.08);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, #f0b429, #e09a12);
+      color: #2a1c00;
+      animation: pulse-ring 2.2s ease infinite;
+    }
+
+    .btn-danger {
+      background: rgba(255, 107, 107, 0.15);
+      color: #ffb4b4;
+      border: 1px solid rgba(255, 107, 107, 0.35);
+    }
+
+    .btn-block { width: 100%; }
+
+    .progress-wrap {
+      margin-top: 14px;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .progress-meta strong { color: var(--text); }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 0.35s ease;
+    }
+
+    .camera-stage {
+      position: relative;
+      margin-top: 14px;
+      aspect-ratio: 3 / 4;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.45)),
+        repeating-linear-gradient(
+          -12deg,
+          rgba(255,255,255,0.02) 0 10px,
+          rgba(255,255,255,0.01) 10px 20px
+        ),
+        #081a17;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .camera-stage video,
+    .camera-stage canvas,
+    .camera-stage img.preview {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
+    }
+
+    .camera-stage canvas,
+    .camera-stage img.preview { display: none; }
+
+    .camera-stage.is-preview video { display: none; }
+    .camera-stage.is-preview canvas,
+    .camera-stage.is-preview img.preview { display: block; }
+
+    .guide {
+      pointer-events: none;
+      position: absolute;
+      inset: 12% 10%;
+      border: 1.5px dashed rgba(46, 196, 160, 0.55);
+      border-radius: 12px;
+      box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.22);
+    }
+
+    .camera-hint {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(7, 22, 20, 0.72);
+      backdrop-filter: blur(8px);
+      color: var(--mist);
+      font-size: 0.86rem;
+      text-align: center;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 14px 16px 16px;
+    }
+
+    .actions .span-2 { grid-column: 1 / -1; }
+
+    .list-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin: 18px 0 10px;
+    }
+
+    .list-head h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .empty {
+      padding: 22px 16px;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .doc-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .doc-item {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(7, 22, 20, 0.45);
+      animation: slide-in 0.28s ease both;
+    }
+
+    .doc-item img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 10px;
+      background: #000;
+    }
+
+    .doc-item h3 {
+      margin: 0 0 4px;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .doc-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .doc-item button {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0 12px;
+    }
+
+    .final {
+      margin-top: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      transform: translateX(-50%) translateY(120%);
+      z-index: 50;
+      max-width: min(92vw, 420px);
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: #12332d;
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: var(--shadow);
+      transition: transform 0.28s ease;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.ok { border-color: rgba(61, 214, 140, 0.45); }
+    .toast.err { border-color: rgba(255, 107, 107, 0.45); }
+
+    .mode-note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    @media (min-width: 720px) {
+      body { padding-top: 28px; }
+      .camera-stage { aspect-ratio: 4 / 3; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="brand">
+      <div>
+        <h1>FileDoc Capture</h1>
+        <p>One file number → one Drive folder → up to 100 docs</p>
+      </div>
+      <div class="badge" id="modeBadge">Local demo</div>
+    </header>
+
+    <section class="panel">
+      <div class="panel-pad">
+        <label for="fileNumber">File number</label>
+        <div class="row">
+          <input id="fileNumber" type="text" inputmode="text" autocomplete="off" placeholder="e.g. FN-1042" />
+          <button type="button" class="btn-primary" id="lockFileBtn">Start</button>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-meta">
+            <span>Saved on form: <strong id="countLabel">0 / 100</strong></span>
+            <span id="folderLabel">Folder: —</span>
+          </div>
+          <div class="bar" aria-hidden="true"><span id="progressBar"></span></div>
+        </div>
+      </div>
+
+      <div class="camera-stage" id="cameraStage">
+        <video id="video" playsinline muted autoplay></video>
+        <canvas id="canvas"></canvas>
+        <img class="preview" id="shotPreview" alt="Captured document preview" />
+        <div class="guide" id="guide" hidden></div>
+        <div class="camera-hint" id="cameraHint">Enter a file number, then open the camera to capture documents one by one.</div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn-secondary" id="openCameraBtn" disabled>Open camera</button>
+        <button type="button" class="btn-accent" id="captureBtn" disabled>Click / Capture</button>
+        <button type="button" class="btn-secondary span-2" id="pickBtn" disabled>Or choose / take photo</button>
+        <input id="filePick" type="file" accept="image/*" capture="environment" hidden />
+        <button type="button" class="btn-primary span-2" id="saveToFormBtn" disabled>Save this photo to form</button>
+        <button type="button" class="btn-secondary span-2" id="retakeBtn" hidden>Retake</button>
+      </div>
+    </section>
+
+    <div class="list-head">
+      <h2>On this form</h2>
+      <span id="sessionMeta">Not started</span>
+    </div>
+    <div id="emptyState" class="empty">No documents yet. Capture and save one at a time.</div>
+    <ul class="doc-list" id="docList" hidden></ul>
+
+    <div class="final">
+      <button type="button" class="btn-primary btn-block" id="saveAllBtn" disabled>Done — save all to Google Drive</button>
+      <button type="button" class="btn-danger btn-block" id="clearBtn" disabled>Clear form photos</button>
+    </div>
+    <p class="mode-note" id="modeNote">
+      Demo mode keeps photos on this device until you press Done.
+      Deploy the Apps Script files in <code>gas/</code> to upload into real Drive folders.
+    </p>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const MAX_DOCS = 100;
+    const state = {
+      fileNumber: "",
+      locked: false,
+      stream: null,
+      pendingDataUrl: null,
+      docs: [],
+      gasMode: typeof google !== "undefined" && google.script && google.script.run
+    };
+
+    const els = {
+      fileNumber: document.getElementById("fileNumber"),
+      lockFileBtn: document.getElementById("lockFileBtn"),
+      openCameraBtn: document.getElementById("openCameraBtn"),
+      captureBtn: document.getElementById("captureBtn"),
+      pickBtn: document.getElementById("pickBtn"),
+      filePick: document.getElementById("filePick"),
+      saveToFormBtn: document.getElementById("saveToFormBtn"),
+      retakeBtn: document.getElementById("retakeBtn"),
+      saveAllBtn: document.getElementById("saveAllBtn"),
+      clearBtn: document.getElementById("clearBtn"),
+      video: document.getElementById("video"),
+      canvas: document.getElementById("canvas"),
+      shotPreview: document.getElementById("shotPreview"),
+      cameraStage: document.getElementById("cameraStage"),
+      cameraHint: document.getElementById("cameraHint"),
+      guide: document.getElementById("guide"),
+      countLabel: document.getElementById("countLabel"),
+      folderLabel: document.getElementById("folderLabel"),
+      progressBar: document.getElementById("progressBar"),
+      emptyState: document.getElementById("emptyState"),
+      docList: document.getElementById("docList"),
+      sessionMeta: document.getElementById("sessionMeta"),
+      toast: document.getElementById("toast"),
+      modeBadge: document.getElementById("modeBadge"),
+      modeNote: document.getElementById("modeNote")
+    };
+
+    if (state.gasMode) {
+      els.modeBadge.textContent = "Google Drive";
+      els.modeNote.textContent = "Connected to Apps Script. Done uploads all photos into Drive folder for this file number.";
+    }
+
+    function toast(message, type) {
+      els.toast.textContent = message;
+      els.toast.className = "toast show" + (type ? " " + type : "");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => els.toast.classList.remove("show"), 2600);
+    }
+
+    function folderName(fileNumber) {
+      return "File-" + String(fileNumber).trim().replace(/[\\/:*?"<>|]/g, "-");
+    }
+
+    function nextDocName() {
+      const n = String(state.docs.length + 1).padStart(3, "0");
+      return "doc-" + n + ".jpg";
+    }
+
+    function updateUI() {
+      const count = state.docs.length;
+      els.countLabel.textContent = count + " / " + MAX_DOCS;
+      els.progressBar.style.width = ((count / MAX_DOCS) * 100) + "%";
+      els.folderLabel.textContent = state.locked ? ("Folder: " + folderName(state.fileNumber)) : "Folder: —";
+      els.sessionMeta.textContent = state.locked ? ("File " + state.fileNumber) : "Not started";
+      els.openCameraBtn.disabled = !state.locked || count >= MAX_DOCS;
+      els.pickBtn.disabled = !state.locked || count >= MAX_DOCS;
+      els.captureBtn.disabled = !state.stream || !!state.pendingDataUrl || count >= MAX_DOCS;
+      els.saveToFormBtn.disabled = !state.pendingDataUrl || count >= MAX_DOCS;
+      els.saveAllBtn.disabled = !state.locked || count === 0;
+      els.clearBtn.disabled = count === 0;
+      els.lockFileBtn.textContent = state.locked ? "Change" : "Start";
+      els.fileNumber.disabled = state.locked && count > 0;
+
+      if (count === 0) {
+        els.emptyState.hidden = false;
+        els.docList.hidden = true;
+        els.docList.innerHTML = "";
+      } else {
+        els.emptyState.hidden = true;
+        els.docList.hidden = false;
+        els.docList.innerHTML = state.docs.map((doc, idx) => `
+          <li class="doc-item">
+            <img src="${doc.dataUrl}" alt="${doc.name}" />
+            <div>
+              <h3>${doc.name}</h3>
+              <p>${Math.round(doc.size / 1024)} KB · ready</p>
+            </div>
+            <button type="button" class="btn-danger" data-remove="${idx}" aria-label="Remove ${doc.name}">✕</button>
+          </li>
+        `).join("");
+      }
+    }
+
+    async function stopCamera() {
+      if (state.stream) {
+        state.stream.getTracks().forEach((t) => t.stop());
+        state.stream = null;
+      }
+      els.video.srcObject = null;
+      els.guide.hidden = true;
+    }
+
+    async function openCamera() {
+      if (!state.locked) return;
+      if (state.docs.length >= MAX_DOCS) {
+        toast("Limit reached: 100 documents per file.", "err");
+        return;
+      }
+      try {
+        await stopCamera();
+        state.pendingDataUrl = null;
+        els.cameraStage.classList.remove("is-preview");
+        els.retakeBtn.hidden = true;
+        els.saveToFormBtn.hidden = false;
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        });
+        state.stream = stream;
+        els.video.srcObject = stream;
+        await els.video.play();
+        els.guide.hidden = false;
+        els.cameraHint.textContent = "Align the document, then press Click / Capture.";
+        updateUI();
+        toast("Camera ready", "ok");
+      } catch (err) {
+        console.error(err);
+        els.cameraHint.textContent = "Camera blocked. Allow camera permission and try again.";
+        toast("Could not open camera", "err");
+      }
+    }
+
+    function showPending(dataUrl) {
+      state.pendingDataUrl = dataUrl;
+      els.shotPreview.src = dataUrl;
+      els.cameraStage.classList.add("is-preview");
+      els.cameraHint.textContent = "Looks good? Save to form, or retake.";
+      els.retakeBtn.hidden = false;
+      updateUI();
+    }
+
+    function captureShot() {
+      if (!state.stream) return;
+      const video = els.video;
+      const canvas = els.canvas;
+      const w = video.videoWidth || 1280;
+      const h = video.videoHeight || 960;
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, w, h);
+      showPending(canvas.toDataURL("image/jpeg", 0.88));
+    }
+
+    function pickPhoto() {
+      if (!state.locked || state.docs.length >= MAX_DOCS) return;
+      els.filePick.value = "";
+      els.filePick.click();
+    }
+
+    function onPickedFile(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => showPending(String(reader.result));
+      reader.readAsDataURL(file);
+    }
+
+    function retake() {
+      state.pendingDataUrl = null;
+      els.cameraStage.classList.remove("is-preview");
+      els.shotPreview.removeAttribute("src");
+      els.retakeBtn.hidden = true;
+      els.cameraHint.textContent = "Align the document, then press Click / Capture.";
+      updateUI();
+    }
+
+    function saveToForm() {
+      if (!state.pendingDataUrl) return;
+      if (state.docs.length >= MAX_DOCS) {
+        toast("Already at 100 documents.", "err");
+        return;
+      }
+      const dataUrl = state.pendingDataUrl;
+      const approxBytes = Math.round((dataUrl.length * 3) / 4);
+      state.docs.push({
+        name: nextDocName(),
+        dataUrl,
+        size: approxBytes,
+        capturedAt: new Date().toISOString()
+      });
+      state.pendingDataUrl = null;
+      els.cameraStage.classList.remove("is-preview");
+      els.shotPreview.removeAttribute("src");
+      els.retakeBtn.hidden = true;
+      els.cameraHint.textContent = "Saved on form. Capture the next document, or press Done when finished.";
+      updateUI();
+      toast("Photo saved to form (" + state.docs.length + "/" + MAX_DOCS + ")", "ok");
+    }
+
+    function lockOrChangeFile() {
+      if (state.locked && state.docs.length > 0) {
+        toast("Clear photos before changing file number.", "err");
+        return;
+      }
+      if (state.locked) {
+        state.locked = false;
+        state.fileNumber = "";
+        stopCamera();
+        els.cameraHint.textContent = "Enter a file number, then open the camera to capture documents one by one.";
+        updateUI();
+        return;
+      }
+      const value = els.fileNumber.value.trim();
+      if (!value) {
+        toast("Enter a file number first.", "err");
+        els.fileNumber.focus();
+        return;
+      }
+      state.fileNumber = value;
+      state.locked = true;
+      els.cameraHint.textContent = "File locked. Open camera and capture documents one by one.";
+      updateUI();
+      toast("Session started for " + value, "ok");
+    }
+
+    function clearForm() {
+      if (!state.docs.length) return;
+      if (!confirm("Remove all photos from this form?")) return;
+      state.docs = [];
+      state.pendingDataUrl = null;
+      els.cameraStage.classList.remove("is-preview");
+      updateUI();
+      toast("Form cleared", "ok");
+    }
+
+    function dataUrlToPayload(doc) {
+      const base64 = doc.dataUrl.split(",")[1];
+      return {
+        name: doc.name,
+        mimeType: "image/jpeg",
+        data: base64,
+        capturedAt: doc.capturedAt
+      };
+    }
+
+    async function saveAllLocal() {
+      const payload = {
+        fileNumber: state.fileNumber,
+        folderName: folderName(state.fileNumber),
+        documentCount: state.docs.length,
+        maxDocuments: MAX_DOCS,
+        savedAt: new Date().toISOString(),
+        documents: state.docs.map((d) => ({
+          name: d.name,
+          size: d.size,
+          capturedAt: d.capturedAt,
+          dataUrl: d.dataUrl
+        }))
+      };
+      localStorage.setItem("filedoc-last-batch", JSON.stringify({
+        fileNumber: payload.fileNumber,
+        folderName: payload.folderName,
+        documentCount: payload.documentCount,
+        savedAt: payload.savedAt
+      }));
+      // Offer a JSON download so the demo is tangible without Drive credentials.
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = folderName(state.fileNumber) + "-batch.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast("Batch saved locally (demo). Deploy gas/ for real Drive upload.", "ok");
+    }
+
+    function saveAllGas() {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .uploadBatch({
+            fileNumber: state.fileNumber,
+            folderName: folderName(state.fileNumber),
+            documents: state.docs.map(dataUrlToPayload)
+          });
+      });
+    }
+
+    async function saveAll() {
+      if (!state.docs.length) return;
+      els.saveAllBtn.disabled = true;
+      els.saveAllBtn.textContent = "Saving…";
+      try {
+        if (state.gasMode) {
+          const result = await saveAllGas();
+          toast("Uploaded " + result.count + " docs to Drive /" + result.folderName, "ok");
+        } else {
+          await saveAllLocal();
+        }
+      } catch (err) {
+        console.error(err);
+        toast(String(err && err.message ? err.message : err), "err");
+      } finally {
+        els.saveAllBtn.textContent = "Done — save all to Google Drive";
+        updateUI();
+      }
+    }
+
+    els.lockFileBtn.addEventListener("click", lockOrChangeFile);
+    els.openCameraBtn.addEventListener("click", openCamera);
+    els.captureBtn.addEventListener("click", captureShot);
+    els.pickBtn.addEventListener("click", pickPhoto);
+    els.filePick.addEventListener("change", onPickedFile);
+    els.saveToFormBtn.addEventListener("click", saveToForm);
+    els.retakeBtn.addEventListener("click", retake);
+    els.saveAllBtn.addEventListener("click", saveAll);
+    els.clearBtn.addEventListener("click", clearForm);
+    els.docList.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-remove]");
+      if (!btn) return;
+      const idx = Number(btn.getAttribute("data-remove"));
+      state.docs.splice(idx, 1);
+      state.docs.forEach((doc, i) => {
+        doc.name = "doc-" + String(i + 1).padStart(3, "0") + ".jpg";
+      });
+      updateUI();
+      toast("Removed from form", "ok");
+    });
+    els.fileNumber.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") lockOrChangeFile();
+    });
+
+    updateUI();
+  </script>
+</body>
+</html>
